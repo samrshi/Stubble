@@ -6,6 +6,14 @@ import SwiftSyntaxMacros
 
 enum MockMacroError: LocalizedError {
     case notAClass
+    case classIsFinal
+    
+    var errorDescription: String? {
+        switch self {
+        case .notAClass: "@Mockable can currently only be applied to classes."
+        case .classIsFinal: "@Mockable cannot currently be applied to final classes."
+        }
+    }
 }
 
 public struct MockableMacro: MemberMacro {
@@ -16,6 +24,10 @@ public struct MockableMacro: MemberMacro {
     ) throws -> [DeclSyntax] {
         // Throw error if not applied to class
         guard let base = declaration.as(ClassDeclSyntax.self) else { throw MockMacroError.notAClass }
+        
+        // Throw an error if applied to a final class
+        let classIsFinal = base.modifiers.contains { $0.name.tokenKind == .keyword(.final) }
+        guard !classIsFinal else { throw MockMacroError.classIsFinal }
         
         // Generate members
         var mockMembers: [MemberBlockItemSyntax] = []

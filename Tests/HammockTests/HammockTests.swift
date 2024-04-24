@@ -52,6 +52,31 @@ final class HammockTests: XCTestCase {
         #endif
     }
     
+    func testFinalClass() {
+        #if canImport(HammockMacros)
+        assertMacroExpansion(
+            """
+            @Mockable
+            final class NetworkService {
+                func makeRequest() -> String {
+                    return "Final"
+                }
+            }
+            """,
+            expandedSource: """
+            final class NetworkService {
+                func makeRequest() -> String {
+                    return "Final"
+                }
+            }
+            """,
+            diagnostics: [.init(message: "classIsFinal", line: 1, column: 1)],
+            macros: testMacros
+        )
+        #else
+            throw XCTSkip("macros are only supported when running tests for the host platform")
+        #endif
+    }
 //    func testMacro() throws {
 //        #if canImport(HammockMacros)
 //        assertMacroExpansion(
