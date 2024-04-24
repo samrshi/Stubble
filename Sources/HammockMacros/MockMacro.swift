@@ -42,8 +42,10 @@ public struct MockableMacro: MemberMacro {
             peerClosure.leadingTrivia += .newlines(member == baseMembers.first ? 1 : 2)
             peerClosure.trailingTrivia += .newlines(2)
             
+            // Build override method
             let override = try buildOverride(for: function)
 
+            // Append both to mocked members list
             mockMembers.append(peerClosure)
             mockMembers.append(override)
         }
