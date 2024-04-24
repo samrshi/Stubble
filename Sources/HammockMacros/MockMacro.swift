@@ -80,14 +80,17 @@ public struct MockableMacro: MemberMacro {
 extension MockableMacro {
     private static func buildPeerClosure(for function: FunctionDeclSyntax) throws -> MemberBlockItemSyntax {
         let funcName = function.name.text
-        let funcSignature = function.signature
-        let funcParams = funcSignature.parameterClause
-        let funcReturn = funcSignature.returnClause
+        let funcParams = function.signature.parameterClause
+        let funcReturn = function.signature.returnClause
+        let funcIsAsync = function.signature.effectSpecifiers?.asyncSpecifier != nil
+        let funcThrows = function.signature.effectSpecifiers?.throwsSpecifier != nil
         
         let closureParams = funcParams.parameters.map { "\($0.type)" }
         let closureParamsStr = closureParams.joined(separator: ", ")
+        let closureAsyncKeyword = funcIsAsync ? "async " : ""
+        let closureThrowsKeyword = funcThrows ? "throws " : ""
         let closureReturn = funcReturn.map { "\($0.type.trimmed)" } ?? "Void"
-        let closureType = "(" + closureParamsStr + ") -> " + closureReturn
+        let closureType = "(" + closureParamsStr + ") \(closureAsyncKeyword)\(closureThrowsKeyword)-> " + closureReturn
         
         let variableName = "_" + funcName
         let variableType = "(\(closureType))?"
@@ -97,6 +100,9 @@ extension MockableMacro {
     }
     
     private static func buildOverride(for function: FunctionDeclSyntax) throws -> MemberBlockItemSyntax {
+        let funcIsAsync = function.signature.effectSpecifiers?.asyncSpecifier != nil
+        let funcThrows = function.signature.effectSpecifiers?.throwsSpecifier != nil
+        
         let peerName = "_" + function.name.text
         
         let overrideModifier = DeclModifierSyntax(name: TokenSyntax.keyword(.override))
@@ -120,6 +126,14 @@ extension MockableMacro {
                 LabeledExprSyntax(expression: argument.expression)
             }
         }
+        
+        // Add try and/or await if necessary
+        let tryAwaitPeerCall: ExprSyntaxProtocol = switch (funcThrows, funcIsAsync) {
+        case (true, true): TryExprSyntax(expression: AwaitExprSyntax(expression: peerCall))
+        case (true, false): TryExprSyntax(expression: peerCall)
+        case (false, true): AwaitExprSyntax(expression: peerCall)
+        case (false, false): peerCall
+        }
 
         // super.func(arg1, arg2, ...)
         let superReference = MemberAccessExprSyntax(base: SuperExprSyntax(), name: function.name)
@@ -129,10 +143,19 @@ extension MockableMacro {
             }
         }
         
+        // Add try and/or await if necessary
+        let tryAwaitSuperCall: ExprSyntaxProtocol = switch (funcThrows, funcIsAsync) {
+        case (true, true): TryExprSyntax(expression: AwaitExprSyntax(expression: superCall))
+        case (true, false): TryExprSyntax(expression: superCall)
+        case (false, true): AwaitExprSyntax(expression: superCall)
+        case (false, false): superCall
+        }
+
+        // if let peer = _func { peer() } else { super.func() }
         let ifLetExpr = try IfExprSyntax("if let peer = \(raw: peerName)") {
-            peerCall
+            tryAwaitPeerCall
         } else: {
-            superCall
+            tryAwaitSuperCall
         }
         
         let ifLetStatement = ExpressionStmtSyntax(expression: ifLetExpr)

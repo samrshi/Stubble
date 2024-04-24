@@ -107,6 +107,79 @@ final class HammockTests: XCTestCase {
         #endif
     }
     
+    func testAsyncThrows() {
+        #if canImport(HammockMacros)
+        assertMacroExpansion(
+            """
+            @Mockable
+            class NetworkService {
+                func funcAsyncThrows() async throws -> String {
+                    return "Return Value"
+                }
+            
+                func funcAsync() async -> String {
+                    return "Return Value"
+                }
+            
+                func funcThrows() throws -> String {
+                    return "Return Value"
+                }
+            }
+            """,
+            expandedSource: """
+            class NetworkService {
+                func funcAsyncThrows() async throws -> String {
+                    return "Return Value"
+                }
+            
+                func funcAsync() async -> String {
+                    return "Return Value"
+                }
+            
+                func funcThrows() throws -> String {
+                    return "Return Value"
+                }
+
+                class Mock: NetworkService {
+                    var _funcAsyncThrows: (() async throws -> String)? = nil
+            
+                    override func funcAsyncThrows() async throws -> String {
+                        if let peer = _funcAsyncThrows {
+                            try await peer()
+                        } else {
+                            try await super.funcAsyncThrows()
+                        }
+                    }
+            
+                    var _funcAsync: (() async -> String)? = nil
+            
+                    override func funcAsync() async -> String {
+                        if let peer = _funcAsync {
+                            await peer()
+                        } else {
+                            await super.funcAsync()
+                        }
+                    }
+            
+                    var _funcThrows: (() throws -> String)? = nil
+            
+                    override func funcThrows() throws -> String {
+                        if let peer = _funcThrows {
+                            try peer()
+                        } else {
+                            try super.funcThrows()
+                        }
+                    }
+                }
+            }
+            """,
+            macros: testMacros
+        )
+        #else
+            throw XCTSkip("macros are only supported when running tests for the host platform")
+        #endif
+    }
+
     func testFinalClass() {
         #if canImport(HammockMacros)
         assertMacroExpansion(
