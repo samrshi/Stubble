@@ -118,8 +118,10 @@ extension MockableMacro {
             let paramValueToken = param.secondName ?? param.firstName
             let paramReference = DeclReferenceExprSyntax(baseName: paramValueToken)
             
-            let paramLabelToken = param.firstName.trimmed == TokenSyntax.wildcardToken() ? nil : param.firstName
-            let closureArgument = LabeledExprSyntax(label: paramLabelToken, colon: TokenSyntax.colonToken(), expression: paramReference)
+            let paramIsWildcard = param.firstName.tokenKind == .wildcard
+            let paramLabelToken = paramIsWildcard ? nil : param.firstName
+            let colonToken = paramIsWildcard ? nil : TokenSyntax.colonToken()
+            let closureArgument = LabeledExprSyntax(label: paramLabelToken, colon: colonToken, expression: paramReference)
             return closureArgument
         }
         

@@ -52,6 +52,43 @@ final class HammockTests: XCTestCase {
         #endif
     }
     
+    func testWildcardParameter() {
+        #if canImport(HammockMacros)
+        assertMacroExpansion(
+            """
+            @Mockable
+            class NetworkService {
+                func makeRequest(_ param1: Int, param2: Int) -> String {
+                    return "Production"
+                }
+            }
+            """,
+            expandedSource: """
+            class NetworkService {
+                func makeRequest(_ param1: Int, param2: Int) -> String {
+                    return "Production"
+                }
+
+                class Mock: NetworkService {
+                    var _makeRequest: ((Int, Int) -> String)? = nil
+            
+                    override func makeRequest(_ param1: Int, param2: Int) -> String {
+                        if let peer = _makeRequest {
+                            peer(param1, param2)
+                        } else {
+                            super.makeRequest(param1, param2: param2)
+                        }
+                    }
+                }
+            }
+            """,
+            macros: testMacros
+        )
+        #else
+            throw XCTSkip("macros are only supported when running tests for the host platform")
+        #endif
+    }
+    
     func testStaticSkipping() {
         #if canImport(HammockMacros)
         assertMacroExpansion(
