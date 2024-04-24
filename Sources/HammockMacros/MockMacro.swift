@@ -34,8 +34,13 @@ public struct MockableMacro: MemberMacro {
         var mockMembers: [MemberBlockItemSyntax] = []
         
         for member in baseMembers {
+            // Skip non-functions
             guard let memberItem = member.as(MemberBlockItemSyntax.self) else { continue }
             guard let function = memberItem.decl.as(FunctionDeclSyntax.self) else { continue }
+            
+            // Skip static functions
+            let methodIsStatic = function.modifiers.contains { $0.name.tokenKind == .keyword(.static) }
+            guard !methodIsStatic else { continue }
             
             // Build peer closure and adjust spacing
             var peerClosure = try buildPeerClosure(for: function)

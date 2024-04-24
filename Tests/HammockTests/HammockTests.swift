@@ -52,6 +52,34 @@ final class HammockTests: XCTestCase {
         #endif
     }
     
+    func testStaticSkipping() {
+        #if canImport(HammockMacros)
+        assertMacroExpansion(
+            """
+            @Mockable
+            class NetworkService {
+                static func makeRequest() -> String {
+                    return "Production"
+                }
+            }
+            """,
+            expandedSource: """
+            class NetworkService {
+                static func makeRequest() -> String {
+                    return "Production"
+                }
+            
+                class Mock: NetworkService {
+                }
+            }
+            """,
+            macros: testMacros
+        )
+        #else
+            throw XCTSkip("macros are only supported when running tests for the host platform")
+        #endif
+    }
+    
     func testTwoMethods() {
         #if canImport(HammockMacros)
         assertMacroExpansion(
