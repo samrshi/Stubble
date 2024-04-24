@@ -30,9 +30,9 @@ public struct MockableMacro: MemberMacro {
         guard !classIsFinal else { throw MockMacroError.classIsFinal }
         
         // Generate members
+        let baseMembers = base.memberBlock.members
         var mockMembers: [MemberBlockItemSyntax] = []
         
-        let baseMembers = base.memberBlock.members
         for member in baseMembers {
             guard let memberItem = member.as(MemberBlockItemSyntax.self) else { continue }
             guard let function = memberItem.decl.as(FunctionDeclSyntax.self) else { continue }
