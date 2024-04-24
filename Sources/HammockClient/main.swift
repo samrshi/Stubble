@@ -2,8 +2,8 @@ import Hammock
 
 @Mockable
 class NetworkService {
-    func makeRequest() -> [String] {
-        return ["Production"]
+    func makeRequest() -> String {
+        return "Production"
     }
     
     func display(_ value: String) {
@@ -17,6 +17,6 @@ func test(_ ns: NetworkService) {
 }
 
 let mock = NetworkService.Mock()
-mock._makeRequest = { return ["Mocked"] }
+mock._makeRequest = { return "Mocked" }
 mock._display = { print("Mocked: \($0)") }
 test(mock)

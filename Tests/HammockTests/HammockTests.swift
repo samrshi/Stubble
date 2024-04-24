@@ -52,6 +52,61 @@ final class HammockTests: XCTestCase {
         #endif
     }
     
+    func testTwoMethods() {
+        #if canImport(HammockMacros)
+        assertMacroExpansion(
+            """
+            @Mockable
+            class NetworkService {
+                func methodOne() {
+                    print("one")
+                }
+            
+                func methodTwo() {
+                    print("two")
+                }
+            }
+            """,
+            expandedSource: """
+            class NetworkService {
+                func methodOne() {
+                    print("one")
+                }
+            
+                func methodTwo() {
+                    print("two")
+                }
+            
+                class Mock: NetworkService {
+                    var _methodOne: (() -> Void)? = nil
+            
+                    override func methodOne() {
+                        if let peer = _methodOne {
+                            peer()
+                        } else {
+                            super.methodOne()
+                        }
+                    }
+            
+                    var _methodTwo: (() -> Void)? = nil
+            
+                    override func methodTwo() {
+                        if let peer = _methodTwo {
+                            peer()
+                        } else {
+                            super.methodTwo()
+                        }
+                    }
+                }
+            }
+            """,
+            macros: testMacros
+        )
+        #else
+            throw XCTSkip("macros are only supported when running tests for the host platform")
+        #endif
+    }
+    
     func testFinalClass() {
         #if canImport(HammockMacros)
         assertMacroExpansion(

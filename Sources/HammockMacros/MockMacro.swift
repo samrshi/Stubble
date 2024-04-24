@@ -32,16 +32,21 @@ public struct MockableMacro: MemberMacro {
         // Generate members
         var mockMembers: [MemberBlockItemSyntax] = []
         
-        for member in base.memberBlock.members {
+        let baseMembers = base.memberBlock.members
+        for member in baseMembers {
             guard let memberItem = member.as(MemberBlockItemSyntax.self) else { continue }
             guard let function = memberItem.decl.as(FunctionDeclSyntax.self) else { continue }
             
-            let peerClosure = try buildPeerClosure(for: function)
+            // Build peer closure and adjust spacing
+            var peerClosure = try buildPeerClosure(for: function)
+            peerClosure.leadingTrivia += .newlines(member == baseMembers.first ? 1 : 2)
+            peerClosure.trailingTrivia += .newlines(2)
+            
             let override = try buildOverride(for: function)
+
             mockMembers.append(peerClosure)
             mockMembers.append(override)
         }
-        
         
         // Generate inheritances
         let mockInheritance = InheritanceClauseSyntax {
@@ -131,7 +136,6 @@ extension MockableMacro {
         let ifLetStatement = ExpressionStmtSyntax(expression: ifLetExpr)
         
         let overrideDecl = FunctionDeclSyntax(
-            leadingTrivia: [.newlines(2)],
             attributes: function.attributes,
             modifiers: overrideModifiers,
             name: function.name,
