@@ -6,7 +6,8 @@ import SwiftSyntaxMacros
 @main
 struct HammockPlugin: CompilerPlugin {
     let providingMacros: [Macro.Type] = [
-        StringifyMacro.self,
         MockableMacro.self,
+        StubbableBodyMacro.self,
+        StubbablePeerMacro.self,
     ]
 }

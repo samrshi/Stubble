@@ -17,14 +17,13 @@ func test(_ service: NetworkService) async {
     }
 }
 
-@main
-struct Main {
-    static func main() async {
-        let mock = NetworkService.Mock()
-        await test(mock)
-        mock._makeRequest = { "Mocked!" }
-        await test(mock)
-        mock._makeRequest = { throw NSError(domain: "HammockMain", code: 1) }
-        await test(mock)
-    }
+func main() async {
+    let mock = NetworkService.Mock()
+    await test(mock)
+    mock._makeRequest = { return "Mocked!" }
+    await test(mock)
+    mock._makeRequest = { throw NSError(domain: "HammockMain", code: 1) }
+    await test(mock)
 }
+
+await main()
