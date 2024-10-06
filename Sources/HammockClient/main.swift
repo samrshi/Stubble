@@ -1,29 +1,22 @@
 import Foundation
 import Hammock
 
-@Mockable
-class NetworkService {
-    func makeRequest() async throws -> String {
-        let (data, _) = try await URLSession.shared.data(from: URL(string: "https://learning.appteamcarolina.com/networking-demo/apprentice")!)
-        return try JSONDecoder().decode(String.self, from: data)
+@Stubbable
+struct Mine {
+    func x() {
+        print("Production")
+    }
+    
+    func asyncX() async throws {
+        print("Production")
+    }
+    
+    func yo() {
+        print("x")
     }
 }
 
-func test(_ service: NetworkService) async {
-    do {
-        print(try await service.makeRequest())
-    } catch {
-        print("Error")
-    }
-}
-
-func main() async {
-    let mock = NetworkService.Mock()
-    await test(mock)
-    mock._makeRequest = { return "Mocked!" }
-    await test(mock)
-    mock._makeRequest = { throw NSError(domain: "HammockMain", code: 1) }
-    await test(mock)
-}
-
-await main()
+var mine = Mine()
+mine.x()
+mine._x = { print("Stubbed!") }
+mine.x()
