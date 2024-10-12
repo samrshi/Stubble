@@ -54,7 +54,7 @@ extension StubbableMemberMacro: BodyMacro {
         }
         
         let ifLetExpr = try IfExprSyntax("if let \(raw: peerName(for: function))") {
-            tryAwaitPeerCall
+            "return \(tryAwaitPeerCall)"
         } else: {
             function.body?.statements ?? []
         }
