@@ -43,7 +43,6 @@ extension StubbableMacro {
         
         let stubbableTypeName = identified.name.trimmed
         
-        
         if declaration.is(EnumDeclSyntax.self) {
             throw DiagnosticsError(
                 syntax: macroSyntax,
