@@ -4,13 +4,15 @@ import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
 
-public struct StubbableMemberMacro {
+public struct StubbableFunctionMacro {}
+
+extension StubbableFunctionMacro {
     private static func peerName(for function: FunctionDeclSyntax) -> String {
         return "_" + function.name.text
     }
 }
 
-extension StubbableMemberMacro: BodyMacro {
+extension StubbableFunctionMacro: BodyMacro {
     public static func expansion(
         of node: AttributeSyntax,
         providingBodyFor declaration: some DeclSyntaxProtocol & WithOptionalCodeBlockSyntax,
@@ -65,7 +67,7 @@ extension StubbableMemberMacro: BodyMacro {
     }
 }
 
-extension StubbableMemberMacro: PeerMacro {
+extension StubbableFunctionMacro: PeerMacro {
     public static func expansion(
         of node: AttributeSyntax,
         providingPeersOf declaration: some DeclSyntaxProtocol,

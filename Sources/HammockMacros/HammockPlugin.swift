@@ -8,6 +8,6 @@ struct HammockPlugin: CompilerPlugin {
     let providingMacros: [Macro.Type] = [
         MockableMacro.self,
         StubbableMacro.self,
-        StubbableMemberMacro.self,
+        StubbableFunctionMacro.self,
     ]
 }

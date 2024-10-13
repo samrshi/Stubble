@@ -9,4 +9,4 @@ public macro Stubbable() = #externalMacro(module: "HammockMacros", type: "Stubba
 
 @attached(peer, names: prefixed(_))
 @attached(body)
-public macro StubbableMember() = #externalMacro(module: "HammockMacros", type: "StubbableMemberMacro")
+public macro StubbableFunction() = #externalMacro(module: "HammockMacros", type: "StubbableFunctionMacro")
