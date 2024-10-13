@@ -251,6 +251,22 @@ final class StubbableFunctionTests: XCTestCase {
         }
     }
     
+    func testErrorGeneric() {
+        assertMacro {
+            """
+            @StubbableFunction
+            func generic<T>() {}
+            """
+        } diagnostics: {
+            """
+            @StubbableFunction
+            func generic<T>() {}
+                        ┬──
+                        ╰─ 🛑 '@StubbableFunction' currently does not support generic functions
+            """
+        }
+    }
+    
     func testErrorNotFunction() {
         assertMacro {
             """

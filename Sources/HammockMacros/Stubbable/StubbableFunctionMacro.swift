@@ -25,6 +25,14 @@ extension StubbableFunctionMacro {
                 id: .invalidApplication)
         }
         
+        if let genericParameterClause = function.genericParameterClause {
+            throw DiagnosticsError(
+                syntax: genericParameterClause,
+                message: "'@StubbableFunction' currently does not support generic functions",
+                id: .invalidApplication
+            )
+        }
+        
         return (function, body)
     }
 }
