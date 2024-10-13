@@ -11,6 +11,22 @@ extension StubbableFunctionMacro {
     private static func peerName(for function: FunctionDeclSyntax) -> String {
         return "_" + function.name.text
     }
+    
+    private static func ensureFunction(
+        for declaration: some DeclSyntaxProtocol & WithOptionalCodeBlockSyntax
+    ) throws -> (function: FunctionDeclSyntax, body: CodeBlockItemListSyntax) {
+        guard
+            let function = declaration.as(FunctionDeclSyntax.self),
+            let body = function.body?.statements
+        else {
+            throw DiagnosticsError(
+                syntax: declaration,
+                message: "'@StubbableFunction' can only be applied to functions",
+                id: .invalidApplication)
+        }
+        
+        return (function, body)
+    }
 }
 
 extension StubbableFunctionMacro: BodyMacro {
@@ -19,20 +35,14 @@ extension StubbableFunctionMacro: BodyMacro {
         providingBodyFor declaration: some DeclSyntaxProtocol & WithOptionalCodeBlockSyntax,
         in context: some MacroExpansionContext
     ) throws -> [CodeBlockItemSyntax] {
-        guard let function = declaration.as(FunctionDeclSyntax.self) else {
-            throw DiagnosticsError(
-                syntax: node,
-                message: "'@StubbableFunction' can only be applied to functions",
-                id: .invalidApplication)
-        }
-        
-        return try buildNewBody(for: function)
+        let (function, originalBody) = try ensureFunction(for: declaration)
+        return try buildNewBody(for: function, originalBody: originalBody)
     }
     
-    private static func buildNewBody(for function: FunctionDeclSyntax) throws -> [CodeBlockItemSyntax] {
-        let funcIsAsync = function.signature.effectSpecifiers?.asyncSpecifier != nil
-        let funcThrows = function.signature.effectSpecifiers?.throwsClause != nil
-        
+    private static func buildNewBody(
+        for function: FunctionDeclSyntax,
+        originalBody: CodeBlockItemListSyntax
+    ) throws -> [CodeBlockItemSyntax] {
         // (param1: param1, param2: param2, ...)
         let arguments = function.signature.parameterClause.parameters.map { param in
             let paramValueToken = param.secondName ?? param.firstName
@@ -55,17 +65,20 @@ extension StubbableFunctionMacro: BodyMacro {
         }
         
         // Add try and/or await if necessary
+        let funcIsAsync = function.signature.effectSpecifiers?.asyncSpecifier != nil
+        let funcThrows = function.signature.effectSpecifiers?.throwsClause != nil
+        
         let tryAwaitPeerCall: ExprSyntaxProtocol = switch (funcThrows, funcIsAsync) {
-        case (true, true): TryExprSyntax(expression: AwaitExprSyntax(expression: peerCall))
-        case (true, false): TryExprSyntax(expression: peerCall)
-        case (false, true): AwaitExprSyntax(expression: peerCall)
+        case (true, true): TryExprSyntax(tryKeyword: .keyword(.try, trailingTrivia: .space), expression: AwaitExprSyntax(awaitKeyword: .keyword(.await, trailingTrivia: .space), expression: peerCall))
+        case (true, false): TryExprSyntax(tryKeyword: .keyword(.try, trailingTrivia: .space), expression: peerCall)
+        case (false, true): AwaitExprSyntax(awaitKeyword: .keyword(.await, trailingTrivia: .space), expression: peerCall)
         case (false, false): peerCall
         }
         
         let ifLetExpr = try IfExprSyntax("if let \(raw: peerName(for: function))") {
             "return \(tryAwaitPeerCall)"
         } else: {
-            function.body?.statements ?? []
+            originalBody
         }
         
         let newBodyExpr = ExprSyntax(ifLetExpr)
