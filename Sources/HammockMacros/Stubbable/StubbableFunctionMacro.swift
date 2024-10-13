@@ -1,5 +1,6 @@
 import Foundation
 import SwiftCompilerPlugin
+import SwiftDiagnostics
 import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
@@ -18,7 +19,13 @@ extension StubbableFunctionMacro: BodyMacro {
         providingBodyFor declaration: some DeclSyntaxProtocol & WithOptionalCodeBlockSyntax,
         in context: some MacroExpansionContext
     ) throws -> [CodeBlockItemSyntax] {
-        guard let function = declaration.as(FunctionDeclSyntax.self) else { return [] }
+        guard let function = declaration.as(FunctionDeclSyntax.self) else {
+            throw DiagnosticsError(
+                syntax: node,
+                message: "'@StubbableFunction' can only be applied to functions",
+                id: .invalidApplication)
+        }
+        
         return try buildNewBody(for: function)
     }
     
@@ -73,7 +80,13 @@ extension StubbableFunctionMacro: PeerMacro {
         providingPeersOf declaration: some DeclSyntaxProtocol,
         in context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
-        guard let function = declaration.as(FunctionDeclSyntax.self) else { return [] }
+        guard let function = declaration.as(FunctionDeclSyntax.self) else {
+            throw DiagnosticsError(
+                syntax: node,
+                message: "'@StubbableFunction' can only be applied to functions",
+                id: .invalidApplication)
+        }
+        
         let peerClosureDecl = try buildPeerClosureDecl(for: function)
         return [DeclSyntax(peerClosureDecl)]
     }
