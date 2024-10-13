@@ -110,7 +110,15 @@ extension StubbableFunctionMacro: PeerMacro {
         let funcIsAsync = function.signature.effectSpecifiers?.asyncSpecifier != nil
         let funcThrows = function.signature.effectSpecifiers?.throwsClause != nil
         
-        let closureParams = funcParams.parameters.map { "\($0.type)" }
+        let closureParams = funcParams.parameters.map {
+            if $0.ellipsis != nil {
+                // Variadic parameters turn into arrays
+                "[\($0.type)]"
+            } else {
+                // Everything else has exact same type as original
+                "\($0.type)"
+            }
+        }
         let closureParamsStr = closureParams.joined(separator: ", ")
         let closureAsyncKeyword = funcIsAsync ? "async " : ""
         let closureThrowsKeyword = funcThrows ? "throws " : ""
