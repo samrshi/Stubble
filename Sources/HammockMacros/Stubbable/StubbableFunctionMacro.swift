@@ -35,6 +35,64 @@ extension StubbableFunctionMacro {
         
         return (function, body)
     }
+    
+    private static func functionBodyIsSingleExpr(body: CodeBlockItemListSyntax) -> Bool {
+        if body.count == 1,
+           let firstItem = body.first,
+           case .expr = firstItem.item
+        {
+            return true
+        } else {
+            return false
+        }
+    }
+
+    private static func functionIsNonVoid(function: FunctionDeclSyntax) -> Bool {
+        // Return false if function has return clause
+        guard let returnClause = function.signature.returnClause else {
+            return false
+        }
+        
+        // Return false if return type is 'Void' or 'Never'
+        if let identifierType = returnClause.type.as(IdentifierTypeSyntax.self),
+           identifierType.name.text == "Void" || identifierType.name.text == "Never" {
+            return false
+        }
+        
+        // Return false if return type is 'Swift.Void' or 'Swift.Never'
+        if let memberType = returnClause.type.as(MemberTypeSyntax.self),
+           let baseType = memberType.baseType.as(IdentifierTypeSyntax.self),
+           baseType.name.text == "Swift",
+           memberType.name.text == "Void" || memberType.name.text == "Never" {
+            return false
+        }
+        
+        // Return false if return clause is '-> ()'
+        if let tupleType = returnClause.type.as(TupleTypeSyntax.self),
+           tupleType.elements.isEmpty {
+            return false
+        }
+        
+        // Return false if return clause is '-> (Void)'
+        if let tupleType = returnClause.type.as(TupleTypeSyntax.self),
+           tupleType.elements.count == 1,
+           let firstType = tupleType.elements.first?.type.as(IdentifierTypeSyntax.self),
+           firstType.name.text == "Void" {
+            return false
+        }
+        
+        // Return false if return clause is '-> (Swift.Void)'
+        if let tupleType = returnClause.type.as(TupleTypeSyntax.self),
+           tupleType.elements.count == 1,
+           let firstType = tupleType.elements.first?.type.as(MemberTypeSyntax.self),
+           let baseType = firstType.baseType.as(IdentifierTypeSyntax.self),
+           baseType.name.text == "Swift", firstType.name.text == "Void" {
+            return false
+        }
+
+        // Function does have omitted return
+        return true
+    }
 }
 
 extension StubbableFunctionMacro: BodyMacro {
@@ -52,6 +110,7 @@ extension StubbableFunctionMacro: BodyMacro {
         originalBody: CodeBlockItemListSyntax
     ) throws -> [CodeBlockItemSyntax] {
         // (param1: param1, param2: param2, ...)
+        // TODO: Remove this section
         let arguments = function.signature.parameterClause.parameters.map { param in
             let paramValueToken = param.secondName ?? param.firstName
             let paramReference = DeclReferenceExprSyntax(baseName: paramValueToken)
@@ -83,12 +142,19 @@ extension StubbableFunctionMacro: BodyMacro {
         case (false, false): peerCall
         }
         
+        // Check if function has omitted return
+        let isNonVoid = functionIsNonVoid(function: function)
+        let isSingleExpr = functionBodyIsSingleExpr(body: originalBody)
+        let hasOmittedReturn = isNonVoid && isSingleExpr
+        
+        // Build if let expression
         let ifLetExpr = try IfExprSyntax("if let \(raw: peerName(for: function))") {
-            "return \(tryAwaitPeerCall)"
+            isNonVoid ? "return \(tryAwaitPeerCall)" : "\(tryAwaitPeerCall)"
         } else: {
-            originalBody
+            hasOmittedReturn ? "return \(originalBody.trimmed)" : originalBody
         }
         
+        // Return result
         let newBodyExpr = ExprSyntax(ifLetExpr)
         let newBody = CodeBlockItemSyntax(item: .expr(newBodyExpr))
         return [newBody]

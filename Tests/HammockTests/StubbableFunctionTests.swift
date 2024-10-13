@@ -30,7 +30,7 @@ final class StubbableFunctionTests: XCTestCase {
             """
             func method() {
                 if let _method {
-                    return _method()
+                    _method()
                 } else {
                     print("production")
                 }
@@ -64,7 +64,7 @@ final class StubbableFunctionTests: XCTestCase {
         }
     }
     
-    func testNoArgsReturnWithoutKeyword() {
+    func testOmittedReturn() {
         assertMacro {
             """
             @StubbableFunction
@@ -83,6 +83,139 @@ final class StubbableFunctionTests: XCTestCase {
             }
 
             var _method: (() -> String)? = nil
+            """
+        }
+    }
+    
+    func testOmittedReturnVoid() {
+        assertMacro {
+            """
+            @StubbableFunction
+            func void() -> Void {
+                "production"
+            }
+            
+            @StubbableFunction
+            func swiftVoid() -> Swift.Void {
+                "production"
+            }
+            """
+        } expansion: {
+            """
+            func void() -> Void {
+                if let _void {
+                    _void()
+                } else {
+                    "production"
+                }
+            }
+
+            var _void: (() -> Void)? = nil
+            func swiftVoid() -> Swift.Void {
+                if let _swiftVoid {
+                    _swiftVoid()
+                } else {
+                    "production"
+                }
+            }
+
+            var _swiftVoid: (() -> Swift.Void)? = nil
+            """
+        }
+    }
+    
+    func testOmittedReturnEmptyTuple() {
+        assertMacro {
+            """
+            @StubbableFunction
+            func emptyTuple() -> () {
+                "production"
+            }
+            """
+        } expansion: {
+            """
+            func emptyTuple() -> () {
+                if let _emptyTuple {
+                    _emptyTuple()
+                } else {
+                    "production"
+                }
+            }
+
+            var _emptyTuple: (() -> ())? = nil
+            """
+        }
+    }
+    
+    func testOmittedReturnVoidTuple() {
+        assertMacro {
+            """
+            @StubbableFunction
+            func voidTuple() -> (Void) {
+                "production"
+            }
+            
+            @StubbableFunction
+            func swiftVoidTuple() -> (Swift.Void) {
+                "production"
+            }
+            """
+        } expansion: {
+            """
+            func voidTuple() -> (Void) {
+                if let _voidTuple {
+                    _voidTuple()
+                } else {
+                    "production"
+                }
+            }
+
+            var _voidTuple: (() -> (Void))? = nil
+            func swiftVoidTuple() -> (Swift.Void) {
+                if let _swiftVoidTuple {
+                    _swiftVoidTuple()
+                } else {
+                    "production"
+                }
+            }
+
+            var _swiftVoidTuple: (() -> (Swift.Void))? = nil
+            """
+        }
+    }
+    
+    func testOmittedReturnNever() {
+        assertMacro {
+            """
+            @StubbableFunction
+            func method() -> Never {
+                fatalError()
+            }
+            @StubbableFunction
+            func method() -> Swift.Never {
+                fatalError()
+            }
+            """
+        } expansion: {
+            """
+            func method() -> Never {
+                if let _method {
+                    _method()
+                } else {
+                    fatalError()
+                }
+            }
+
+            var _method: (() -> Never)? = nil
+            func method() -> Swift.Never {
+                if let _method {
+                    _method()
+                } else {
+                    fatalError()
+                }
+            }
+
+            var _method: (() -> Swift.Never)? = nil
             """
         }
     }
@@ -109,7 +242,7 @@ final class StubbableFunctionTests: XCTestCase {
             """
             func singleNamedArg(x: String) {
                 if let _singleNamedArg {
-                    return _singleNamedArg(x)
+                    _singleNamedArg(x)
                 } else {
                     print(x)
                 }
@@ -118,7 +251,7 @@ final class StubbableFunctionTests: XCTestCase {
             var _singleNamedArg: ((String) -> Void)? = nil
             func singleWildcardArg(_ x: String) {
                 if let _singleWildcardArg {
-                    return _singleWildcardArg(x)
+                    _singleWildcardArg(x)
                 } else {
                     print(x)
                 }
@@ -127,7 +260,7 @@ final class StubbableFunctionTests: XCTestCase {
             var _singleWildcardArg: ((String) -> Void)? = nil
             func multipleArgs(x: String, _ y: String) {
                 if let _multipleArgs {
-                    return _multipleArgs(x, y)
+                    _multipleArgs(x, y)
                 } else {
                     print(x + y)
                 }
@@ -150,7 +283,7 @@ final class StubbableFunctionTests: XCTestCase {
             """
             func singleVariadicArg(x: String...) {
                 if let _singleVariadicArg {
-                    return _singleVariadicArg(x)
+                    _singleVariadicArg(x)
                 } else {
                     print(x)
                 }
@@ -173,7 +306,7 @@ final class StubbableFunctionTests: XCTestCase {
             """
             func asyncOnly() async {
                 if let _asyncOnly {
-                    return await _asyncOnly()
+                    await _asyncOnly()
                 } else {
                     print("asyncOnly")
                 }
@@ -196,7 +329,7 @@ final class StubbableFunctionTests: XCTestCase {
             """
             func throwsOnly() throws {
                 if let _throwsOnly {
-                    return try _throwsOnly()
+                    try _throwsOnly()
                 } else {
                     print("throwsOnly")
                 }
@@ -220,7 +353,7 @@ final class StubbableFunctionTests: XCTestCase {
             """
             func asyncThrows() async throws {
                 if let _asyncThrows {
-                    return try await _asyncThrows()
+                    try await _asyncThrows()
                 } else {
                     print("asyncThrows")
                 }
@@ -241,7 +374,7 @@ final class StubbableFunctionTests: XCTestCase {
             """
             func empty() {
                 if let _empty {
-                    return _empty()
+                    _empty()
                 } else {
                 }
             }
