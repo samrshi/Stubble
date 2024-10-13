@@ -16,7 +16,7 @@ enum MockMacroError: LocalizedError {
     }
 }
 
-public struct MockableMacro: MemberMacro {
+struct MockableMacro: MemberMacro {
     public static func expansion(
         of node: AttributeSyntax,
         providingMembersOf declaration: some DeclGroupSyntax,
