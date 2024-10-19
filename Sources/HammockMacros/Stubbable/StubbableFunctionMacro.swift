@@ -135,29 +135,40 @@ extension StubbableFunctionMacro: BodyMacro {
         let funcIsAsync = function.signature.effectSpecifiers?.asyncSpecifier != nil
         let funcThrows = function.signature.effectSpecifiers?.throwsClause != nil
         
-        let tryAwaitPeerCall: ExprSyntaxProtocol = switch (funcThrows, funcIsAsync) {
-        case (true, true): TryExprSyntax(tryKeyword: .keyword(.try, trailingTrivia: .space), expression: AwaitExprSyntax(awaitKeyword: .keyword(.await, trailingTrivia: .space), expression: peerCall))
-        case (true, false): TryExprSyntax(tryKeyword: .keyword(.try, trailingTrivia: .space), expression: peerCall)
-        case (false, true): AwaitExprSyntax(awaitKeyword: .keyword(.await, trailingTrivia: .space), expression: peerCall)
-        case (false, false): peerCall
+        let tryAwaitPeerCall: CodeBlockItemSyntax = switch (funcThrows, funcIsAsync) {
+        case (true, true):   "try await \(peerCall)"
+        case (true, false):  "try \(peerCall)"
+        case (false, true):  "await \(peerCall)"
+        case (false, false): "\(peerCall)"
         }
         
-        // Check if function has omitted return
+        // Add return keyword to peer call if necessary
         let isNonVoid = functionIsNonVoid(function: function)
+        let peerCallWithReturnIfNecessary: CodeBlockItemSyntax = if isNonVoid {
+            "return \(tryAwaitPeerCall)"
+        } else {
+            "\(tryAwaitPeerCall)"
+        }
+        
+        // Add return keyword to original body if it has ommitted return
         let isSingleExpr = functionBodyIsSingleExpr(body: originalBody)
-        let hasOmittedReturn = isNonVoid && isSingleExpr
+        let originalBodyWithReturnIfNecessary: CodeBlockItemSyntax = if isNonVoid && isSingleExpr {
+            "return \(originalBody.trimmed)"
+        } else {
+            "\(originalBody)"
+        }
         
         // Build if let expression
-        let ifLetExpr = try IfExprSyntax("if let \(raw: peerName(for: function))") {
-            isNonVoid ? "return \(tryAwaitPeerCall)" : "\(tryAwaitPeerCall)"
-        } else: {
-            hasOmittedReturn ? "return \(originalBody.trimmed)" : originalBody
+        let ifLetExpr: CodeBlockItemSyntax = """
+        if let \(raw: peerName(for: function)) {
+            \(peerCallWithReturnIfNecessary.trimmed)
+        } else {
+            \(originalBodyWithReturnIfNecessary.trimmed)
         }
+        """
         
         // Return result
-        let newBodyExpr = ExprSyntax(ifLetExpr)
-        let newBody = CodeBlockItemSyntax(item: .expr(newBodyExpr))
-        return [newBody]
+        return [ifLetExpr]
     }
 }
 
@@ -184,14 +195,9 @@ extension StubbableFunctionMacro: PeerMacro {
         let funcIsAsync = function.signature.effectSpecifiers?.asyncSpecifier != nil
         let funcThrows = function.signature.effectSpecifiers?.throwsClause != nil
         
+        // Build closure parameter types, turning variadics into arrays
         let closureParams = funcParams.parameters.map {
-            if $0.ellipsis != nil {
-                // Variadic parameters turn into arrays
-                "[\($0.type)]"
-            } else {
-                // Everything else has exact same type as original
-                "\($0.type)"
-            }
+            $0.ellipsis != nil ? "[\($0.type)]" : "\($0.type)"
         }
         let closureParamsStr = closureParams.joined(separator: ", ")
         let closureAsyncKeyword = funcIsAsync ? "async " : ""

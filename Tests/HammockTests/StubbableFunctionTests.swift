@@ -376,6 +376,7 @@ final class StubbableFunctionTests: XCTestCase {
                 if let _empty {
                     _empty()
                 } else {
+            
                 }
             }
 
