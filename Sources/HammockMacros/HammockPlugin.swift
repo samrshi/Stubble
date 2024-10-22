@@ -9,5 +9,6 @@ struct HammockPlugin: CompilerPlugin {
         MockableMacro.self,
         StubbableMacro.self,
         StubbableFunctionMacro.self,
+        StubbablePropertyMacro.self,
     ]
 }

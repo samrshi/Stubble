@@ -2,13 +2,10 @@ import Foundation
 import Hammock
 import Observation
 
-@Observable
+//@Observable
 class Foo {
-    var x: Int
-    
-    init(x: Int) {
-        self.x = x
-    }
+    @StubbableProperty
+    var x: Int = 1
 }
 
 class NS {
@@ -54,3 +51,12 @@ ns._setX = { property, newValue in
 }
 ns.x.append("appended")
 print(ns.x)
+
+let foo = Foo()
+print(foo.x)
+foo._setX = {
+    print("setting")
+    $0 = $1 * 2
+}
+foo.x = 10
+print(foo.x)
