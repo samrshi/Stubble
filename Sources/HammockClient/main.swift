@@ -2,7 +2,7 @@ import Foundation
 import Hammock
 import Observation
 
-//@Observable
+// @Observable
 class Foo {
     @StubbableProperty
     var x: Int = 1
@@ -10,7 +10,7 @@ class Foo {
 
 class NS {
     var _x: [String] = ["prod"]
-    
+
     var x: [String] = ["prod"] {
         @storageRestrictions(initializes: _x)
         init(initialValue) {
@@ -33,7 +33,7 @@ class NS {
             }
         }
     }
-    
+
     var _getX: (([String]) -> [String])? = nil
     var _setX: ((inout [String], [String]) -> Void)? = nil
 }
@@ -49,6 +49,7 @@ print(ns.x)
 ns._setX = { property, newValue in
     myX = newValue
 }
+
 ns.x.append("appended")
 print(ns.x)
 
@@ -58,5 +59,6 @@ foo._setX = {
     print("setting")
     $0 = $1 * 2
 }
+
 foo.x = 10
 print(foo.x)

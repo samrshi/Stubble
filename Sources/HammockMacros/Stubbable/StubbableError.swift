@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  StubbableError.swift
 //  Hammock
 //
 //  Created by Samuel Shi on 10/12/24.
@@ -19,7 +19,7 @@ struct StubbableDiagnostic: DiagnosticMessage {
 
     init(message: String, domain: String, id: ID, severity: DiagnosticSeverity = .error) {
         self.message = message
-        diagnosticID = MessageID(domain: domain, id: id.rawValue)
+        self.diagnosticID = MessageID(domain: domain, id: id.rawValue)
         self.severity = severity
     }
 }
@@ -41,8 +41,10 @@ extension DiagnosticsError {
                         message: message,
                         domain: domain,
                         id: id,
-                        severity: severity),
-                    fixIts: fixIt.map { [$0] } ?? [])
+                        severity: severity
+                    ),
+                    fixIts: fixIt.map { [$0] } ?? []
+                ),
             ]
         )
     }

@@ -1,8 +1,8 @@
 // swift-tools-version: 6.0
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
-import PackageDescription
 import CompilerPluginSupport
+import PackageDescription
 
 let package = Package(
     name: "Hammock",
@@ -30,7 +30,7 @@ let package = Package(
             name: "HammockMacros",
             dependencies: [
                 .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
-                .product(name: "SwiftCompilerPlugin", package: "swift-syntax")
+                .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
             ]
         ),
 

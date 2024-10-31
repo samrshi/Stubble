@@ -1,8 +1,6 @@
+import MacroTesting
 import SwiftSyntaxMacros
 import XCTest
-
-import MacroTesting
-
 @testable import HammockMacros
 
 final class StubbablePropertyTests: XCTestCase {
@@ -13,7 +11,7 @@ final class StubbablePropertyTests: XCTestCase {
             super.invokeTest()
         }
     }
-    
+
     func testBasic() {
         assertMacro {
             """

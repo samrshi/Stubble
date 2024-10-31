@@ -11,7 +11,7 @@ extension StubbableFunctionMacro {
     private static func peerName(for function: FunctionDeclSyntax) -> String {
         return "_" + function.name.text
     }
-    
+
     private static func ensureFunction(
         for declaration: some DeclSyntaxProtocol & WithOptionalCodeBlockSyntax
     ) throws -> (function: FunctionDeclSyntax, body: CodeBlockItemListSyntax) {
@@ -22,9 +22,10 @@ extension StubbableFunctionMacro {
             throw DiagnosticsError(
                 syntax: declaration,
                 message: "'@StubbableFunction' can only be applied to functions",
-                id: .invalidApplication)
+                id: .invalidApplication
+            )
         }
-        
+
         if let genericParameterClause = function.genericParameterClause {
             throw DiagnosticsError(
                 syntax: genericParameterClause,
@@ -32,10 +33,10 @@ extension StubbableFunctionMacro {
                 id: .invalidApplication
             )
         }
-        
+
         return (function, body)
     }
-    
+
     private static func functionBodyIsSingleExpr(body: CodeBlockItemListSyntax) -> Bool {
         if body.count == 1,
            let firstItem = body.first,
@@ -52,41 +53,46 @@ extension StubbableFunctionMacro {
         guard let returnClause = function.signature.returnClause else {
             return false
         }
-        
+
         // Return false if return type is 'Void' or 'Never'
         if let identifierType = returnClause.type.as(IdentifierTypeSyntax.self),
-           identifierType.name.text == "Void" || identifierType.name.text == "Never" {
+           identifierType.name.text == "Void" || identifierType.name.text == "Never"
+        {
             return false
         }
-        
+
         // Return false if return type is 'Swift.Void' or 'Swift.Never'
         if let memberType = returnClause.type.as(MemberTypeSyntax.self),
            let baseType = memberType.baseType.as(IdentifierTypeSyntax.self),
            baseType.name.text == "Swift",
-           memberType.name.text == "Void" || memberType.name.text == "Never" {
+           memberType.name.text == "Void" || memberType.name.text == "Never"
+        {
             return false
         }
-        
+
         // Return false if return clause is '-> ()'
         if let tupleType = returnClause.type.as(TupleTypeSyntax.self),
-           tupleType.elements.isEmpty {
+           tupleType.elements.isEmpty
+        {
             return false
         }
-        
+
         // Return false if return clause is '-> (Void)'
         if let tupleType = returnClause.type.as(TupleTypeSyntax.self),
            tupleType.elements.count == 1,
            let firstType = tupleType.elements.first?.type.as(IdentifierTypeSyntax.self),
-           firstType.name.text == "Void" {
+           firstType.name.text == "Void"
+        {
             return false
         }
-        
+
         // Return false if return clause is '-> (Swift.Void)'
         if let tupleType = returnClause.type.as(TupleTypeSyntax.self),
            tupleType.elements.count == 1,
            let firstType = tupleType.elements.first?.type.as(MemberTypeSyntax.self),
            let baseType = firstType.baseType.as(IdentifierTypeSyntax.self),
-           baseType.name.text == "Swift", firstType.name.text == "Void" {
+           baseType.name.text == "Swift", firstType.name.text == "Void"
+        {
             return false
         }
 
@@ -104,7 +110,7 @@ extension StubbableFunctionMacro: BodyMacro {
         let (function, originalBody) = try ensureFunction(for: declaration)
         return try buildNewBody(for: function, originalBody: originalBody)
     }
-    
+
     private static func buildNewBody(
         for function: FunctionDeclSyntax,
         originalBody: CodeBlockItemListSyntax
@@ -114,14 +120,14 @@ extension StubbableFunctionMacro: BodyMacro {
         let arguments = function.signature.parameterClause.parameters.map { param in
             let paramValueToken = param.secondName ?? param.firstName
             let paramReference = DeclReferenceExprSyntax(baseName: paramValueToken)
-            
+
             let paramIsWildcard = param.firstName.tokenKind == .wildcard
             let paramLabelToken = paramIsWildcard ? nil : param.firstName
             let colonToken = paramIsWildcard ? nil : TokenSyntax.colonToken()
             let closureArgument = LabeledExprSyntax(label: paramLabelToken, colon: colonToken, expression: paramReference)
             return closureArgument
         }
-        
+
         // peer(arg1, arg2, ...)
         let peerReference = DeclReferenceExprSyntax(baseName: .identifier(peerName(for: function)))
         let peerCall = FunctionCallExprSyntax(callee: peerReference) {
@@ -130,18 +136,18 @@ extension StubbableFunctionMacro: BodyMacro {
                 LabeledExprSyntax(expression: argument.expression)
             }
         }
-        
+
         // Add try and/or await if necessary
         let funcIsAsync = function.signature.effectSpecifiers?.asyncSpecifier != nil
         let funcThrows = function.signature.effectSpecifiers?.throwsClause != nil
-        
+
         let tryAwaitPeerCall: CodeBlockItemSyntax = switch (funcThrows, funcIsAsync) {
-        case (true, true):   "try await \(peerCall)"
-        case (true, false):  "try \(peerCall)"
-        case (false, true):  "await \(peerCall)"
+        case (true, true): "try await \(peerCall)"
+        case (true, false): "try \(peerCall)"
+        case (false, true): "await \(peerCall)"
         case (false, false): "\(peerCall)"
         }
-        
+
         // Add return keyword to peer call if necessary
         let isNonVoid = functionIsNonVoid(function: function)
         let peerCallWithReturnIfNecessary: CodeBlockItemSyntax = if isNonVoid {
@@ -149,7 +155,7 @@ extension StubbableFunctionMacro: BodyMacro {
         } else {
             "\(tryAwaitPeerCall)"
         }
-        
+
         // Add return keyword to original body if it has ommitted return
         let isSingleExpr = functionBodyIsSingleExpr(body: originalBody)
         let originalBodyWithReturnIfNecessary: CodeBlockItemSyntax = if isNonVoid && isSingleExpr {
@@ -157,7 +163,7 @@ extension StubbableFunctionMacro: BodyMacro {
         } else {
             "\(originalBody)"
         }
-        
+
         // Build if let expression
         let ifLetExpr: CodeBlockItemSyntax = """
         if let \(raw: peerName(for: function)) {
@@ -166,7 +172,7 @@ extension StubbableFunctionMacro: BodyMacro {
             \(originalBodyWithReturnIfNecessary.trimmed)
         }
         """
-        
+
         // Return result
         return [ifLetExpr]
     }
@@ -182,19 +188,20 @@ extension StubbableFunctionMacro: PeerMacro {
             throw DiagnosticsError(
                 syntax: node,
                 message: "'@StubbableFunction' can only be applied to functions",
-                id: .invalidApplication)
+                id: .invalidApplication
+            )
         }
-        
+
         let peerClosureDecl = try buildPeerClosureDecl(for: function)
         return [DeclSyntax(peerClosureDecl)]
     }
-    
+
     private static func buildPeerClosureDecl(for function: FunctionDeclSyntax) throws -> VariableDeclSyntax {
         let funcParams = function.signature.parameterClause
         let funcReturn = function.signature.returnClause
         let funcIsAsync = function.signature.effectSpecifiers?.asyncSpecifier != nil
         let funcThrows = function.signature.effectSpecifiers?.throwsClause != nil
-        
+
         // Build closure parameter types, turning variadics into arrays
         let closureParams = funcParams.parameters.map {
             $0.ellipsis != nil ? "[\($0.type)]" : "\($0.type)"
@@ -204,7 +211,7 @@ extension StubbableFunctionMacro: PeerMacro {
         let closureThrowsKeyword = funcThrows ? "throws " : ""
         let closureReturn = funcReturn.map { "\($0.type.trimmed)" } ?? "Void"
         let closureType = "(" + closureParamsStr + ") \(closureAsyncKeyword)\(closureThrowsKeyword)-> " + closureReturn
-        
+
         let variableName = peerName(for: function)
         let variableType = "(\(closureType))?"
 

@@ -1,15 +1,13 @@
+import MacroTesting
 import SwiftSyntaxMacros
 import XCTest
-
-import MacroTesting
-
 @testable import HammockMacros
 
 final class StubbableTests: XCTestCase {
     let testMacros: [String: Macro.Type] = [
         "Stubbable": StubbableMacro.self,
     ]
-    
+
     override func invokeTest() {
         withMacroTesting(
             macros: ["Stubbable": StubbableMacro.self]
@@ -17,7 +15,7 @@ final class StubbableTests: XCTestCase {
             super.invokeTest()
         }
     }
-    
+
     func testBasicClass() {
         assertMacro {
             """
@@ -39,7 +37,7 @@ final class StubbableTests: XCTestCase {
             """
         }
     }
-    
+
     func testBasicStruct() {
         assertMacro {
             """
@@ -61,7 +59,7 @@ final class StubbableTests: XCTestCase {
             """
         }
     }
-    
+
     func testBasicActor() {
         assertMacro {
             """
@@ -83,12 +81,12 @@ final class StubbableTests: XCTestCase {
             """
         }
     }
-    
+
     func testErrorExtension() {
         assertMacro {
             """
             class NetworkService {}
-            
+
             @Stubbable
             extension NetworkService {
                 func makeRequest() -> String {
@@ -111,7 +109,7 @@ final class StubbableTests: XCTestCase {
             """
         }
     }
-    
+
     func testErrorEnum() {
         assertMacro {
             """
@@ -135,7 +133,7 @@ final class StubbableTests: XCTestCase {
             """
         }
     }
-    
+
     func testErrorProtocol() {
         assertMacro {
             """

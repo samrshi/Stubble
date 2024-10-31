@@ -1,15 +1,13 @@
+import MacroTesting
 import SwiftSyntaxMacros
 import XCTest
-
-import MacroTesting
-
 @testable import HammockMacros
 
 final class StubbableFunctionTests: XCTestCase {
     let testMacros: [String: Macro.Type] = [
         "StubbableFunction": StubbableMacro.self,
     ]
-    
+
     override func invokeTest() {
         withMacroTesting(
             macros: ["StubbableFunction": StubbableFunctionMacro.self]
@@ -17,7 +15,7 @@ final class StubbableFunctionTests: XCTestCase {
             super.invokeTest()
         }
     }
-    
+
     func testNoArgsVoid() {
         assertMacro {
             """
@@ -40,7 +38,7 @@ final class StubbableFunctionTests: XCTestCase {
             """
         }
     }
-    
+
     func testNoArgsReturn() {
         assertMacro {
             """
@@ -63,7 +61,7 @@ final class StubbableFunctionTests: XCTestCase {
             """
         }
     }
-    
+
     func testOmittedReturn() {
         assertMacro {
             """
@@ -86,7 +84,7 @@ final class StubbableFunctionTests: XCTestCase {
             """
         }
     }
-    
+
     func testOmittedReturnVoid() {
         assertMacro {
             """
@@ -94,7 +92,7 @@ final class StubbableFunctionTests: XCTestCase {
             func void() -> Void {
                 "production"
             }
-            
+
             @StubbableFunction
             func swiftVoid() -> Swift.Void {
                 "production"
@@ -123,7 +121,7 @@ final class StubbableFunctionTests: XCTestCase {
             """
         }
     }
-    
+
     func testOmittedReturnEmptyTuple() {
         assertMacro {
             """
@@ -146,7 +144,7 @@ final class StubbableFunctionTests: XCTestCase {
             """
         }
     }
-    
+
     func testOmittedReturnVoidTuple() {
         assertMacro {
             """
@@ -154,7 +152,7 @@ final class StubbableFunctionTests: XCTestCase {
             func voidTuple() -> (Void) {
                 "production"
             }
-            
+
             @StubbableFunction
             func swiftVoidTuple() -> (Swift.Void) {
                 "production"
@@ -183,7 +181,7 @@ final class StubbableFunctionTests: XCTestCase {
             """
         }
     }
-    
+
     func testOmittedReturnNever() {
         assertMacro {
             """
@@ -219,7 +217,7 @@ final class StubbableFunctionTests: XCTestCase {
             """
         }
     }
-    
+
     func testFunctionsWithArgs() {
         assertMacro {
             """
@@ -227,12 +225,12 @@ final class StubbableFunctionTests: XCTestCase {
             func singleNamedArg(x: String) {
                 print(x)
             }
-            
+
             @StubbableFunction
             func singleWildcardArg(_ x: String) {
                 print(x)
             }
-            
+
             @StubbableFunction
             func multipleArgs(x: String, _ y: String) {
                 print(x + y)
@@ -270,7 +268,7 @@ final class StubbableFunctionTests: XCTestCase {
             """
         }
     }
-    
+
     func testVariadicFunction() {
         assertMacro {
             """
@@ -293,7 +291,7 @@ final class StubbableFunctionTests: XCTestCase {
             """
         }
     }
-    
+
     func testAsync() {
         assertMacro {
             """
@@ -316,7 +314,7 @@ final class StubbableFunctionTests: XCTestCase {
             """
         }
     }
-    
+
     func testThrows() {
         assertMacro {
             """
@@ -339,8 +337,7 @@ final class StubbableFunctionTests: XCTestCase {
             """
         }
     }
-            
-    
+
     func testAsyncThrows() {
         assertMacro {
             """
@@ -363,7 +360,7 @@ final class StubbableFunctionTests: XCTestCase {
             """
         }
     }
-    
+
     func testEmptyBody() {
         assertMacro {
             """
@@ -376,7 +373,7 @@ final class StubbableFunctionTests: XCTestCase {
                 if let _empty {
                     _empty()
                 } else {
-            
+
                 }
             }
 
@@ -384,7 +381,7 @@ final class StubbableFunctionTests: XCTestCase {
             """
         }
     }
-    
+
     func testErrorGeneric() {
         assertMacro {
             """
@@ -400,7 +397,7 @@ final class StubbableFunctionTests: XCTestCase {
             """
         }
     }
-    
+
     func testErrorNotFunction() {
         assertMacro {
             """

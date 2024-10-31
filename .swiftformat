@@ -94,4 +94,4 @@
 --xcodeindentation enabled
 --yodaswap always
 --disable elseOnSameLine,fileHeader,hoistAwait,hoistPatternLet,hoistTry,redundantExtensionACL,redundantLet,redundantLetError,redundantNilInit,redundantOptionalBinding,redundantRawValues,redundantType,sortTypealiases,unusedArguments
---enable blankLinesBetweenImports,blockComments,docComments,isEmpty,wrapEnumCases
+--enable blankLinesBetweenImports,blockComments,isEmpty,wrapEnumCases

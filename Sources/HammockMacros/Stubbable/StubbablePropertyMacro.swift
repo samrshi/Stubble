@@ -5,15 +5,15 @@ import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
 
-public struct StubbablePropertyMacro {
+public enum StubbablePropertyMacro {
     static func basePropertyName(for variableName: TokenSyntax) -> TokenSyntax {
         return "_\(variableName.trimmed)"
     }
-    
+
     static func getterName(for variableName: TokenSyntax) -> TokenSyntax {
         return "_get\(raw: variableName.text.capitalized)"
     }
-    
+
     static func setterName(for variableName: TokenSyntax) -> TokenSyntax {
         return "_set\(raw: variableName.text.capitalized)"
     }
@@ -27,16 +27,16 @@ extension StubbablePropertyMacro: PeerMacro {
             let newPattern = PatternSyntax(fromProtocol: newIdentifierPattern)
             return $0.with(\.pattern, newPattern)
         })
-        
+
         let newAttributes = variableDecl.attributes.filter { attribute in
             switch attribute {
             case .attribute(let attributeSyntax):
                 return attributeSyntax.attributeName.as(IdentifierTypeSyntax.self)?.name.text != "StubbableProperty"
-            case .ifConfigDecl(_):
+            case .ifConfigDecl:
                 return true
             }
         }
-        
+
         return VariableDeclSyntax(
             leadingTrivia: variableDecl.leadingTrivia,
             attributes: newAttributes,
@@ -46,7 +46,7 @@ extension StubbablePropertyMacro: PeerMacro {
             trailingTrivia: variableDecl.trailingTrivia
         )
     }
-    
+
     public static func expansion(
         of node: AttributeSyntax,
         providingPeersOf declaration: some DeclSyntaxProtocol,
@@ -57,9 +57,10 @@ extension StubbablePropertyMacro: PeerMacro {
             throw DiagnosticsError(
                 syntax: node,
                 message: "'@StubbableProperty' can only be applied to properties",
-                id: .invalidApplication)
+                id: .invalidApplication
+            )
         }
-        
+
         guard let type = variableDecl.type else {
             let variableDeclWithType = variableDecl
                 .with(\.bindings, PatternBindingListSyntax(variableDecl.bindings.map { originalBinding in
@@ -68,21 +69,23 @@ extension StubbablePropertyMacro: PeerMacro {
                         .with(\.pattern, originalBinding.pattern.trimmed)
                         .with(\.typeAnnotation, TypeAnnotationSyntax(type: missingTypeSyntax))
                 }))
-            
+
             throw DiagnosticsError(
                 syntax: variableDecl,
                 message: "'@StubbableProperty' requires an explicit type",
                 id: .invalidApplication,
                 fixIt: FixIt(
                     message: StubbableFixItMessage(message: "'@StubbableProperty' requires an explicit type", id: .missingType),
-                    changes: [.replace(oldNode: Syntax(variableDecl), newNode: Syntax(variableDeclWithType))]))
+                    changes: [.replace(oldNode: Syntax(variableDecl), newNode: Syntax(variableDeclWithType))]
+                )
+            )
         }
-        
+
         guard let variableName = variableDecl.identifier else {
             // TODO: Descriptive error?
             return []
         }
-        
+
         // TODO: Add parentheses if closure type?
         let basePropertyDecl: DeclSyntax = DeclSyntax(fromProtocol: basePropertyDecl(for: variableDecl))
         let getterPropertyDecl: DeclSyntax = "var \(getterName(for: variableName)): (() -> \(type.trimmed))? = nil"
@@ -101,18 +104,19 @@ extension StubbablePropertyMacro: AccessorMacro {
             throw DiagnosticsError(
                 syntax: node,
                 message: "'@StubbableProperty' can only be applied to properties",
-                id: .invalidApplication)
+                id: .invalidApplication
+            )
         }
-        
+
         guard let variableName = variableDecl.identifier else {
             // TODO: Descriptive error?
             return []
         }
-        
+
         let baseProperty = basePropertyName(for: variableName)
         let getter = getterName(for: variableName)
         let setter = setterName(for: variableName)
-        
+
         let initAccessor: AccessorDeclSyntax = """
         @storageRestrictions(initializes: _\(variableName))
         init(initialValue) {
@@ -129,7 +133,7 @@ extension StubbablePropertyMacro: AccessorMacro {
             }
         }
         """
-        
+
         let setAccessor: AccessorDeclSyntax = """
         set {
             if let \(setter) {
@@ -148,5 +152,4 @@ extension StubbablePropertyMacro: AccessorMacro {
     }
 }
 
-extension VariableDeclSyntax {
-}
+extension VariableDeclSyntax {}

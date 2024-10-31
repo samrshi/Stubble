@@ -4,10 +4,10 @@ struct StubbableFixItMessage: FixItMessage {
     enum ID: String {
         case missingType = "missing type"
     }
-    
+
     let fixItID: MessageID
     let message: String
-    
+
     init(
         message: String,
         domain: String = "Stubbable",
