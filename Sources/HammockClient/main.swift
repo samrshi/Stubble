@@ -2,6 +2,11 @@ import Foundation
 import Hammock
 import Observation
 
+class X {
+    @StubbableProperty
+    var x: Int = 1
+}
+
 @Stubbable
 class Foo {
     var x: Int = 1

@@ -6,7 +6,7 @@ import XCTest
 final class StubbablePropertyTests: XCTestCase {
     override func invokeTest() {
         withMacroTesting(
-            macros: ["StubabbleProperty": StubbablePropertyMacro.self]
+            macros: ["StubbableProperty": StubbablePropertyMacro.self]
         ) {
             super.invokeTest()
         }
@@ -15,7 +15,7 @@ final class StubbablePropertyTests: XCTestCase {
     func testBasic() {
         assertMacro {
             """
-            @StubabbleProperty
+            @StubbableProperty
             var x: Int = 1
             """
         } expansion: {
@@ -27,14 +27,14 @@ final class StubbablePropertyTests: XCTestCase {
                 }
                 get {
                     if let _getX {
-                        _x = _getX()
+                        return _getX()
                     } else {
                         return _x
                     }
                 }
                 set {
                     if let _setX {
-                        _setX(&_x, _x)
+                        _setX(&_x, newValue)
                     } else {
                         _x = newValue
                     }

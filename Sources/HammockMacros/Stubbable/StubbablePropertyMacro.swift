@@ -17,7 +17,7 @@ public enum StubbablePropertyMacro {
     static func setterName(for variableName: TokenSyntax) -> TokenSyntax {
         return "_set\(raw: variableName.text.capitalized)"
     }
-    
+
     static func unwrapVariable(
         from declaration: some DeclSyntaxProtocol
     ) throws -> (variableDecl: VariableDeclSyntax, type: TypeSyntax, identifier: TokenSyntax) {
@@ -57,7 +57,7 @@ public enum StubbablePropertyMacro {
                 id: .invalidApplication
             )
         }
-        
+
         guard variableDecl.bindingSpecifier.text == "var" else {
             let newBindingSpecifier = TokenSyntax("var")
                 .with(\.leadingTrivia, variableDecl.bindingSpecifier.leadingTrivia)
@@ -76,10 +76,10 @@ public enum StubbablePropertyMacro {
                 )
             )
         }
-        
+
         return (variableDecl: variableDecl, type: type, identifier: identifier)
     }
-    
+
     static func declarationIsValid(_ declaration: some DeclSyntaxProtocol) -> Bool {
         do {
             _ = try unwrapVariable(from: declaration)

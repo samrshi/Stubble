@@ -393,6 +393,7 @@ final class StubbableFunctionTests: XCTestCase {
             @StubbableFunction
             func generic<T>() {}
                         ┬──
+                        ├─ 🛑 '@StubbableFunction' currently does not support generic functions
                         ╰─ 🛑 '@StubbableFunction' currently does not support generic functions
             """
         }
@@ -417,7 +418,6 @@ final class StubbableFunctionTests: XCTestCase {
             """
             class Class {
                 @StubbableFunction
-                ┬─────────────────
                 ├─ 🛑 '@StubbableFunction' can only be applied to functions
                 ╰─ 🛑 '@StubbableFunction' can only be applied to functions
                 init() {
@@ -425,7 +425,6 @@ final class StubbableFunctionTests: XCTestCase {
                 }
 
                 @StubbableFunction
-                ┬─────────────────
                 ├─ 🛑 '@StubbableFunction' can only be applied to functions
                 ╰─ 🛑 '@StubbableFunction' can only be applied to functions
                 deinit {
