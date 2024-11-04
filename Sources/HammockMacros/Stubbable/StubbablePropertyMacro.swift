@@ -17,6 +17,77 @@ public enum StubbablePropertyMacro {
     static func setterName(for variableName: TokenSyntax) -> TokenSyntax {
         return "_set\(raw: variableName.text.capitalized)"
     }
+    
+    static func unwrapVariable(
+        from declaration: some DeclSyntaxProtocol
+    ) throws -> (variableDecl: VariableDeclSyntax, type: TypeSyntax, identifier: TokenSyntax) {
+        // TODO: Check context to make sure we're in a class/struct/actor?
+        guard let variableDecl = declaration.as(VariableDeclSyntax.self) else {
+            throw DiagnosticsError(
+                syntax: declaration,
+                message: "'@StubbableProperty' can only be applied to properties",
+                id: .invalidApplication
+            )
+        }
+
+        guard let type = variableDecl.type else {
+            let variableDeclWithType = variableDecl
+                .with(\.bindings, PatternBindingListSyntax(variableDecl.bindings.map { originalBinding in
+                    let missingTypeSyntax = MissingTypeSyntax(leadingTrivia: .space, placeholder: .identifier("<#Type#>"), trailingTrivia: .space)
+                    return originalBinding
+                        .with(\.pattern, originalBinding.pattern.trimmed)
+                        .with(\.typeAnnotation, TypeAnnotationSyntax(type: missingTypeSyntax))
+                }))
+
+            throw DiagnosticsError(
+                syntax: variableDecl,
+                message: "'@StubbableProperty' requires an explicit type",
+                id: .invalidApplication,
+                fixIt: FixIt(
+                    message: StubbableFixItMessage(message: "'@StubbableProperty' requires an explicit type", id: .missingType),
+                    changes: [.replace(oldNode: Syntax(variableDecl), newNode: Syntax(variableDeclWithType))]
+                )
+            )
+        }
+
+        guard let identifier = variableDecl.identifier else {
+            throw DiagnosticsError(
+                syntax: variableDecl,
+                message: "'@StubbableProperty' requires an explicit identifier",
+                id: .invalidApplication
+            )
+        }
+        
+        guard variableDecl.bindingSpecifier.text == "var" else {
+            let newBindingSpecifier = TokenSyntax("var")
+                .with(\.leadingTrivia, variableDecl.bindingSpecifier.leadingTrivia)
+                .with(\.trailingTrivia, variableDecl.bindingSpecifier.trailingTrivia)
+
+            let variableDeclWithLet = variableDecl
+                .with(\.bindingSpecifier, newBindingSpecifier)
+
+            throw DiagnosticsError(
+                syntax: variableDecl,
+                message: "'@StubbableProperty' can only be applied to 'var' members.",
+                id: .invalidApplication,
+                fixIt: FixIt(
+                    message: StubbableFixItMessage(message: "'@StubbableProperty' requires 'var'", id: .letNotVar),
+                    changes: [.replace(oldNode: Syntax(variableDecl), newNode: Syntax(variableDeclWithLet))]
+                )
+            )
+        }
+        
+        return (variableDecl: variableDecl, type: type, identifier: identifier)
+    }
+    
+    static func declarationIsValid(_ declaration: some DeclSyntaxProtocol) -> Bool {
+        do {
+            _ = try unwrapVariable(from: declaration)
+            return true
+        } catch {
+            return false
+        }
+    }
 }
 
 extension StubbablePropertyMacro: PeerMacro {
@@ -52,39 +123,7 @@ extension StubbablePropertyMacro: PeerMacro {
         providingPeersOf declaration: some DeclSyntaxProtocol,
         in context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
-        // TODO: Check context to make sure we're in a class/struct/actor?
-        guard let variableDecl = declaration.as(VariableDeclSyntax.self) else {
-            throw DiagnosticsError(
-                syntax: node,
-                message: "'@StubbableProperty' can only be applied to properties",
-                id: .invalidApplication
-            )
-        }
-
-        guard let type = variableDecl.type else {
-            let variableDeclWithType = variableDecl
-                .with(\.bindings, PatternBindingListSyntax(variableDecl.bindings.map { originalBinding in
-                    let missingTypeSyntax = MissingTypeSyntax(leadingTrivia: .space, placeholder: .identifier("<#Type#>"), trailingTrivia: .space)
-                    return originalBinding
-                        .with(\.pattern, originalBinding.pattern.trimmed)
-                        .with(\.typeAnnotation, TypeAnnotationSyntax(type: missingTypeSyntax))
-                }))
-
-            throw DiagnosticsError(
-                syntax: variableDecl,
-                message: "'@StubbableProperty' requires an explicit type",
-                id: .invalidApplication,
-                fixIt: FixIt(
-                    message: StubbableFixItMessage(message: "'@StubbableProperty' requires an explicit type", id: .missingType),
-                    changes: [.replace(oldNode: Syntax(variableDecl), newNode: Syntax(variableDeclWithType))]
-                )
-            )
-        }
-
-        guard let variableName = variableDecl.identifier else {
-            // TODO: Descriptive error?
-            return []
-        }
+        let (variableDecl, type, variableName) = try unwrapVariable(from: declaration)
 
         // TODO: Add parentheses if closure type?
         let basePropertyDecl: DeclSyntax = DeclSyntax(fromProtocol: basePropertyDecl(for: variableDecl))
@@ -100,18 +139,7 @@ extension StubbablePropertyMacro: AccessorMacro {
         providingAccessorsOf declaration: some DeclSyntaxProtocol,
         in context: some MacroExpansionContext
     ) throws -> [AccessorDeclSyntax] {
-        guard let variableDecl = declaration.as(VariableDeclSyntax.self) else {
-            throw DiagnosticsError(
-                syntax: node,
-                message: "'@StubbableProperty' can only be applied to properties",
-                id: .invalidApplication
-            )
-        }
-
-        guard let variableName = variableDecl.identifier else {
-            // TODO: Descriptive error?
-            return []
-        }
+        let (_, _, variableName) = try unwrapVariable(from: declaration)
 
         let baseProperty = basePropertyName(for: variableName)
         let getter = getterName(for: variableName)
@@ -151,5 +179,3 @@ extension StubbablePropertyMacro: AccessorMacro {
         ]
     }
 }
-
-extension VariableDeclSyntax {}

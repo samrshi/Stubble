@@ -2,10 +2,13 @@ import Foundation
 import Hammock
 import Observation
 
-// @Observable
+@Stubbable
 class Foo {
-    @StubbableProperty
     var x: Int = 1
+    
+    func method() {
+        print("hi")
+    }
 }
 
 class NS {

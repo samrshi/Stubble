@@ -5,15 +5,13 @@ import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
 
-public struct StubbableFunctionMacro {}
-
-extension StubbableFunctionMacro {
+public struct StubbableFunctionMacro {
     private static func peerName(for function: FunctionDeclSyntax) -> String {
         return "_" + function.name.text
     }
 
-    private static func ensureFunction(
-        for declaration: some DeclSyntaxProtocol & WithOptionalCodeBlockSyntax
+    private static func unwrapFunction(
+        from declaration: some DeclSyntaxProtocol
     ) throws -> (function: FunctionDeclSyntax, body: CodeBlockItemListSyntax) {
         guard
             let function = declaration.as(FunctionDeclSyntax.self),
@@ -35,6 +33,15 @@ extension StubbableFunctionMacro {
         }
 
         return (function, body)
+    }
+    
+    static func declarationIsValid(_ declaration: some DeclSyntaxProtocol) -> Bool {
+        do {
+            _ = try unwrapFunction(from: declaration)
+            return true
+        } catch {
+            return false
+        }
     }
 
     private static func functionBodyIsSingleExpr(body: CodeBlockItemListSyntax) -> Bool {
@@ -107,7 +114,7 @@ extension StubbableFunctionMacro: BodyMacro {
         providingBodyFor declaration: some DeclSyntaxProtocol & WithOptionalCodeBlockSyntax,
         in context: some MacroExpansionContext
     ) throws -> [CodeBlockItemSyntax] {
-        let (function, originalBody) = try ensureFunction(for: declaration)
+        let (function, originalBody) = try unwrapFunction(from: declaration)
         return try buildNewBody(for: function, originalBody: originalBody)
     }
 
@@ -184,14 +191,7 @@ extension StubbableFunctionMacro: PeerMacro {
         providingPeersOf declaration: some DeclSyntaxProtocol,
         in context: some MacroExpansionContext
     ) throws -> [DeclSyntax] {
-        guard let function = declaration.as(FunctionDeclSyntax.self) else {
-            throw DiagnosticsError(
-                syntax: node,
-                message: "'@StubbableFunction' can only be applied to functions",
-                id: .invalidApplication
-            )
-        }
-
+        let (function, _) = try unwrapFunction(from: declaration)
         let peerClosureDecl = try buildPeerClosureDecl(for: function)
         return [DeclSyntax(peerClosureDecl)]
     }

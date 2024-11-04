@@ -3,6 +3,7 @@ import SwiftDiagnostics
 struct StubbableFixItMessage: FixItMessage {
     enum ID: String {
         case missingType = "missing type"
+        case letNotVar = "let not var"
     }
 
     let fixItID: MessageID

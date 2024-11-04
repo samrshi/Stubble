@@ -14,11 +14,10 @@ struct StubbableMacro: MemberAttributeMacro {
     ) throws -> [AttributeSyntax] {
         try ensureCorrectApplication(macroSyntax: node, declaration: declaration)
 
-        if member.is(FunctionDeclSyntax.self) {
+        if member.is(FunctionDeclSyntax.self), StubbableFunctionMacro.declarationIsValid(member) {
             return [AttributeSyntax("@StubbableFunction")]
-        } else if member.is(VariableDeclSyntax.self) {
-            // TODO: Add support for properties
-            return []
+        } else if member.is(VariableDeclSyntax.self), StubbablePropertyMacro.declarationIsValid(member) {
+            return [AttributeSyntax("@StubbableProperty")]
         } else {
             return []
         }
