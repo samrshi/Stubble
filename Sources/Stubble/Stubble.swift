@@ -1,9 +1,6 @@
 // The Swift Programming Language
 // https://docs.swift.org/swift-book
 
-@attached(member, names: named(Mock))
-public macro Mockable() = #externalMacro(module: "StubbleMacros", type: "MockableMacro")
-
 @attached(memberAttribute)
 public macro Stubbable() = #externalMacro(module: "StubbleMacros", type: "StubbableMacro")
 

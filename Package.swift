@@ -13,10 +13,6 @@ let package = Package(
             name: "Stubble",
             targets: ["Stubble"]
         ),
-        .executable(
-            name: "StubbleClient",
-            targets: ["StubbleClient"]
-        ),
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-syntax.git", from: "600.0.0"),
