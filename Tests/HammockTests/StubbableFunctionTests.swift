@@ -1,7 +1,7 @@
 import MacroTesting
 import SwiftSyntaxMacros
 import XCTest
-@testable import HammockMacros
+@testable import StubbleMacros
 
 final class StubbableFunctionTests: XCTestCase {
     let testMacros: [String: Macro.Type] = [

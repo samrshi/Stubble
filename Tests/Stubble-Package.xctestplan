@@ -1,0 +1,28 @@
+{
+  "configurations" : [
+    {
+      "id" : "39D7F950-53CB-49D2-9811-3AFC0420D6B0",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:",
+      "identifier" : "HammockClient",
+      "name" : "HammockClient"
+    }
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "HammockTests",
+        "name" : "HammockTests"
+      }
+    }
+  ],
+  "version" : 1
+}

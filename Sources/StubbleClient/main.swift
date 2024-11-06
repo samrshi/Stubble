@@ -1,5 +1,5 @@
 import Foundation
-import Hammock
+import Stubble
 import Observation
 
 @Stubbable

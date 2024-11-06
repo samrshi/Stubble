@@ -1,6 +1,6 @@
 //
 //  StubbableError.swift
-//  Hammock
+//  Stubble
 //
 //  Created by Samuel Shi on 10/12/24.
 //

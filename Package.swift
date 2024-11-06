@@ -5,17 +5,17 @@ import CompilerPluginSupport
 import PackageDescription
 
 let package = Package(
-    name: "Hammock",
+    name: "Stubble",
     platforms: [.macOS(.v15), .iOS(.v18), .tvOS(.v18), .watchOS(.v11), .macCatalyst(.v18)],
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
-            name: "Hammock",
-            targets: ["Hammock"]
+            name: "Stubble",
+            targets: ["Stubble"]
         ),
         .executable(
-            name: "HammockClient",
-            targets: ["HammockClient"]
+            name: "StubbleClient",
+            targets: ["StubbleClient"]
         ),
     ],
     dependencies: [
@@ -27,7 +27,7 @@ let package = Package(
         // Targets can depend on other targets in this package and products from dependencies.
         // Macro implementation that performs the source transformation of a macro.
         .macro(
-            name: "HammockMacros",
+            name: "StubbleMacros",
             dependencies: [
                 .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
                 .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
@@ -35,16 +35,16 @@ let package = Package(
         ),
 
         // Library that exposes a macro as part of its API, which is used in client programs.
-        .target(name: "Hammock", dependencies: ["HammockMacros"]),
+        .target(name: "Stubble", dependencies: ["StubbleMacros"]),
 
         // A client of the library, which is able to use the macro in its own code.
-        .executableTarget(name: "HammockClient", dependencies: ["Hammock"]),
+        .executableTarget(name: "StubbleClient", dependencies: ["Stubble"]),
 
         // A test target used to develop the macro implementation.
         .testTarget(
-            name: "HammockTests",
+            name: "StubbleTests",
             dependencies: [
-                "HammockMacros",
+                "StubbleMacros",
                 .product(name: "MacroTesting", package: "swift-macro-testing"),
                 .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax"),
             ]
