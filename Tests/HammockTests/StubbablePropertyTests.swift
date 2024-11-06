@@ -34,18 +34,18 @@ final class StubbablePropertyTests: XCTestCase {
                 }
                 set {
                     if let _setX {
-                        _setX(&_x, newValue)
+                        _setX(newValue)
                     } else {
                         _x = newValue
                     }
                 }
             }
 
-            var _x: Int = 1
+            private var _x: Int = 1
 
             var _getX: (() -> Int)? = nil
 
-            var _setX: ((inout Int, Int) -> Void)? = nil
+            var _setX: ((Int) -> Void)? = nil
             """
         }
     }

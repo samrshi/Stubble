@@ -70,6 +70,10 @@ extension VariableDeclSyntax {
     var isImmutable: Bool {
         return bindingSpecifier.tokenKind == .keyword(.let)
     }
+    
+    var isMutable: Bool {
+        return bindingSpecifier.tokenKind == .keyword(.var)
+    }
 
     func isEquivalent(to other: VariableDeclSyntax) -> Bool {
         if isInstance != other.isInstance {

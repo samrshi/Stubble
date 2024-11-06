@@ -29,6 +29,33 @@ public enum StubbablePropertyMacro {
                 id: .invalidApplication
             )
         }
+        
+        guard variableDecl.isInstance else {
+            throw DiagnosticsError(
+                syntax: variableDecl,
+                message: "'@StubbableProperty' cannot be applied to static properties.",
+                id: .invalidApplication
+            )
+        }
+        
+        guard variableDecl.isMutable else {
+            let newBindingSpecifier = TokenSyntax("var")
+                .with(\.leadingTrivia, variableDecl.bindingSpecifier.leadingTrivia)
+                .with(\.trailingTrivia, variableDecl.bindingSpecifier.trailingTrivia)
+
+            let variableDeclWithLet = variableDecl
+                .with(\.bindingSpecifier, newBindingSpecifier)
+
+            throw DiagnosticsError(
+                syntax: variableDecl,
+                message: "'@StubbableProperty' can only be applied to 'var' members.",
+                id: .invalidApplication,
+                fixIt: FixIt(
+                    message: StubbableFixItMessage(message: "'@StubbableProperty' requires 'var'", id: .letNotVar),
+                    changes: [.replace(oldNode: Syntax(variableDecl), newNode: Syntax(variableDeclWithLet))]
+                )
+            )
+        }
 
         guard let type = variableDecl.type else {
             let variableDeclWithType = variableDecl
@@ -58,25 +85,6 @@ public enum StubbablePropertyMacro {
             )
         }
 
-        guard variableDecl.bindingSpecifier.text == "var" else {
-            let newBindingSpecifier = TokenSyntax("var")
-                .with(\.leadingTrivia, variableDecl.bindingSpecifier.leadingTrivia)
-                .with(\.trailingTrivia, variableDecl.bindingSpecifier.trailingTrivia)
-
-            let variableDeclWithLet = variableDecl
-                .with(\.bindingSpecifier, newBindingSpecifier)
-
-            throw DiagnosticsError(
-                syntax: variableDecl,
-                message: "'@StubbableProperty' can only be applied to 'var' members.",
-                id: .invalidApplication,
-                fixIt: FixIt(
-                    message: StubbableFixItMessage(message: "'@StubbableProperty' requires 'var'", id: .letNotVar),
-                    changes: [.replace(oldNode: Syntax(variableDecl), newNode: Syntax(variableDeclWithLet))]
-                )
-            )
-        }
-
         return (variableDecl: variableDecl, type: type, identifier: identifier)
     }
 
@@ -91,31 +99,9 @@ public enum StubbablePropertyMacro {
 }
 
 extension StubbablePropertyMacro: PeerMacro {
-    private static func basePropertyDecl(for variableDecl: VariableDeclSyntax) -> VariableDeclSyntax {
-        let newBindings = PatternBindingListSyntax(variableDecl.bindings.map {
-            guard let identifier = $0.pattern.as(IdentifierPatternSyntax.self)?.identifier else { return $0 }
-            let newIdentifierPattern = IdentifierPatternSyntax(identifier: basePropertyName(for: identifier))
-            let newPattern = PatternSyntax(fromProtocol: newIdentifierPattern)
-            return $0.with(\.pattern, newPattern)
-        })
-
-        let newAttributes = variableDecl.attributes.filter { attribute in
-            switch attribute {
-            case .attribute(let attributeSyntax):
-                return attributeSyntax.attributeName.as(IdentifierTypeSyntax.self)?.name.text != "StubbableProperty"
-            case .ifConfigDecl:
-                return true
-            }
-        }
-
-        return VariableDeclSyntax(
-            leadingTrivia: variableDecl.leadingTrivia,
-            attributes: newAttributes,
-            modifiers: variableDecl.modifiers, // TODO: Check this for access modifiers
-            bindingSpecifier: variableDecl.bindingSpecifier,
-            bindings: newBindings,
-            trailingTrivia: variableDecl.trailingTrivia
-        )
+    private static func basePropertyDecl(for variableDecl: VariableDeclSyntax, variableName: TokenSyntax, type: TypeSyntax) -> DeclSyntax {
+        let basePropertyDecl: DeclSyntax = "private var \(basePropertyName(for: variableName)): \(type.trimmed)\(variableDecl.initializer.map { " \($0)" } ?? "")"
+        return basePropertyDecl
     }
 
     public static func expansion(
@@ -126,9 +112,9 @@ extension StubbablePropertyMacro: PeerMacro {
         let (variableDecl, type, variableName) = try unwrapVariable(from: declaration)
 
         // TODO: Add parentheses if closure type?
-        let basePropertyDecl: DeclSyntax = DeclSyntax(fromProtocol: basePropertyDecl(for: variableDecl))
+        let basePropertyDecl: DeclSyntax =  basePropertyDecl(for: variableDecl, variableName: variableName, type: type)
         let getterPropertyDecl: DeclSyntax = "var \(getterName(for: variableName)): (() -> \(type.trimmed))? = nil"
-        let setterPropertyDecl: DeclSyntax = "var \(setterName(for: variableName)): ((inout \(type.trimmed), \(type.trimmed)) -> Void)? = nil"
+        let setterPropertyDecl: DeclSyntax = "var \(setterName(for: variableName)): ((\(type.trimmed)) -> Void)? = nil"
         return [basePropertyDecl, getterPropertyDecl, setterPropertyDecl]
     }
 }
@@ -165,7 +151,7 @@ extension StubbablePropertyMacro: AccessorMacro {
         let setAccessor: AccessorDeclSyntax = """
         set {
             if let \(setter) {
-                \(setter)(&\(baseProperty), newValue)
+                \(setter)(newValue)
             } else {
                 \(baseProperty) = newValue
             }

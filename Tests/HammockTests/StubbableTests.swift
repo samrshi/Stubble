@@ -4,10 +4,6 @@ import XCTest
 @testable import HammockMacros
 
 final class StubbableTests: XCTestCase {
-    let testMacros: [String: Macro.Type] = [
-        "Stubbable": StubbableMacro.self,
-    ]
-
     override func invokeTest() {
         withMacroTesting(
             macros: ["Stubbable": StubbableMacro.self]
