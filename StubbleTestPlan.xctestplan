@@ -1,0 +1,24 @@
+{
+  "configurations" : [
+    {
+      "id" : "0F02D33C-5E99-4043-BAFB-B10EF9710E39",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "testTimeoutsEnabled" : true
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "StubbleTests",
+        "name" : "StubbleTests"
+      }
+    }
+  ],
+  "version" : 1
+}
