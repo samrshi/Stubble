@@ -56,6 +56,14 @@ public enum StubbablePropertyMacro {
                 )
             )
         }
+        
+        guard !variableDecl.isComputed else {
+            throw DiagnosticsError(
+                syntax: variableDecl,
+                message: "'@StubbableProperty' cannot be applied to computed properties.",
+                id: .invalidApplication
+            )
+        }
 
         guard let type = variableDecl.type else {
             let variableDeclWithType = variableDecl
