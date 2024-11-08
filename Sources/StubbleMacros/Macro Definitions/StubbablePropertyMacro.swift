@@ -29,7 +29,7 @@ public enum StubbablePropertyMacro {
                 id: .invalidApplication
             )
         }
-        
+
         guard variableDecl.isInstance else {
             throw DiagnosticsError(
                 syntax: variableDecl,
@@ -37,7 +37,7 @@ public enum StubbablePropertyMacro {
                 id: .invalidApplication
             )
         }
-        
+
         guard variableDecl.isMutable else {
             let newBindingSpecifier = TokenSyntax("var")
                 .with(\.leadingTrivia, variableDecl.bindingSpecifier.leadingTrivia)
@@ -56,7 +56,7 @@ public enum StubbablePropertyMacro {
                 )
             )
         }
-        
+
         guard !variableDecl.isComputed else {
             throw DiagnosticsError(
                 syntax: variableDecl,
@@ -120,7 +120,7 @@ extension StubbablePropertyMacro: PeerMacro {
         let (variableDecl, type, variableName) = try unwrapVariable(from: declaration)
 
         // TODO: Add parentheses if closure type?
-        let basePropertyDecl: DeclSyntax =  basePropertyDecl(for: variableDecl, variableName: variableName, type: type)
+        let basePropertyDecl: DeclSyntax = basePropertyDecl(for: variableDecl, variableName: variableName, type: type)
         let getterPropertyDecl: DeclSyntax = "var \(getterName(for: variableName)): (() -> \(type.trimmed))? = nil"
         let setterPropertyDecl: DeclSyntax = "var \(setterName(for: variableName)): ((\(type.trimmed)) -> Void)? = nil"
         return [basePropertyDecl, getterPropertyDecl, setterPropertyDecl]

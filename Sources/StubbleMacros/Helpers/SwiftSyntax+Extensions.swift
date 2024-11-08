@@ -70,7 +70,7 @@ extension VariableDeclSyntax {
     var isImmutable: Bool {
         return bindingSpecifier.tokenKind == .keyword(.let)
     }
-    
+
     var isMutable: Bool {
         return bindingSpecifier.tokenKind == .keyword(.var)
     }

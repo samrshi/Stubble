@@ -42,7 +42,7 @@ class RosterViewModel {
         self.service = service
     }
 
-    func studentsByGraduation() -> [Int : [Student]] {
+    func studentsByGraduation() -> [Int: [Student]] {
         let students = service.fetchStudents()
         let grouped = Dictionary(grouping: students, by: \.graduationYear)
         return grouped
@@ -53,7 +53,7 @@ class RosterViewModel {
 func testEmptyRoster() async throws {
     let sam = Student(name: "Sam", graduationYear: 2024)
     let morgan = Student(name: "Morgan", graduationYear: 2025)
-    
+
     let stub = RosterServiceStub()
     stub.students = [sam, morgan]
 

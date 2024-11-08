@@ -24,5 +24,5 @@ let service = Service()
 // Production response
 print(try await service.makeRequest())
 
-service._makeRequest = { return Classroom(id: UUID(), building: "HELLO", number: "WORLD", description: nil) }
+service._makeRequest = { Classroom(id: UUID(), building: "HELLO", number: "WORLD", description: nil) }
 print(try await service.makeRequest())

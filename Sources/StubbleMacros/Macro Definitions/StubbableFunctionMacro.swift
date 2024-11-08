@@ -5,7 +5,7 @@ import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
 
-public struct StubbableFunctionMacro {
+public enum StubbableFunctionMacro {
     private static func peerName(for function: FunctionDeclSyntax) -> String {
         return "_" + function.name.text
     }
@@ -34,7 +34,7 @@ public struct StubbableFunctionMacro {
 
         return (function, body)
     }
-    
+
     static func declarationIsValid(_ declaration: some DeclSyntaxProtocol) -> Bool {
         do {
             _ = try unwrapFunction(from: declaration)
