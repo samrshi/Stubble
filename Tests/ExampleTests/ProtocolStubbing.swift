@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  ProtocolStubbing.swift
 //  Stubble
 //
 //  Created by Samuel Shi on 11/7/24.
