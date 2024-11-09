@@ -31,6 +31,14 @@ public enum StubbableFunctionMacro {
                 id: .invalidApplication
             )
         }
+        
+        if function.signature.effectSpecifiers?.throwsClause?.throwsSpecifier.text == "rethrows" {
+            throw DiagnosticsError(
+                syntax: declaration,
+                message: "'@StubbableFunction' currently does not support 'rethrows' functions",
+                id: .invalidApplication
+            )
+        }
 
         return (function, body)
     }
