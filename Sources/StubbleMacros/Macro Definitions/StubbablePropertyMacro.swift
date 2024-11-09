@@ -11,11 +11,11 @@ public enum StubbablePropertyMacro {
     }
 
     static func getterName(for variableName: TokenSyntax) -> TokenSyntax {
-        return "_get\(raw: variableName.text.capitalized)"
+        return "_get\(raw: variableName.text.capitalizedFirstLetter)"
     }
 
     static func setterName(for variableName: TokenSyntax) -> TokenSyntax {
-        return "_set\(raw: variableName.text.capitalized)"
+        return "_set\(raw: variableName.text.capitalizedFirstLetter)"
     }
 
     static func unwrapVariable(
@@ -139,13 +139,6 @@ extension StubbablePropertyMacro: AccessorMacro {
         let getter = getterName(for: variableName)
         let setter = setterName(for: variableName)
 
-        let initAccessor: AccessorDeclSyntax = """
-        @storageRestrictions(initializes: _\(variableName))
-        init(initialValue) {
-            _\(variableName) = initialValue
-        }
-        """
-
         let getAccessor: AccessorDeclSyntax = """
         get {
             if let \(getter) {
@@ -166,10 +159,25 @@ extension StubbablePropertyMacro: AccessorMacro {
         }
         """
 
+        let initAccessor: AccessorDeclSyntax = """
+        @storageRestrictions(initializes: _\(variableName))
+        init(initialValue) {
+            _\(variableName) = initialValue
+        }
+        """
+
         return [
-            initAccessor,
             getAccessor,
             setAccessor,
+            initAccessor,
         ]
+    }
+}
+
+extension String {
+    var capitalizedFirstLetter: String {
+        let firstLetter = prefix(1).capitalized
+        let remainingLetters = dropFirst()
+        return firstLetter + remainingLetters
     }
 }
