@@ -45,8 +45,5 @@ let package = Package(
                 .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax"),
             ]
         ),
-
-        // A test target used to write example tests using Stubble.
-        .testTarget(name: "ExampleTests", dependencies: ["Stubble"]),
     ]
 )

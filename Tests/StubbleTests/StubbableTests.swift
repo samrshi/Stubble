@@ -33,6 +33,65 @@ final class StubbableTests: XCTestCase {
             """
         }
     }
+    
+    func testPropertyApplied() {
+        assertMacro {
+            """
+            @Stubbable
+            class NetworkService {
+                var x: Int = 0
+            }
+            """
+        } expansion: {
+            """
+            class NetworkService {
+                @StubbableProperty
+                var x: Int = 0
+            }
+            """
+        }
+    }
+    
+    func testSkippedMembers() {
+        assertMacro {
+            """
+            @Stubbable
+            class NetworkService {
+                let constant: Int = 0
+            
+                var computed: Int { 2 }
+            
+                static var staticProp: Int = 1
+                
+                var missingType = 2
+            
+                func generic<T>(x: T) {}
+            
+                func rethrowing() rethrows {}
+            
+                static func staticFunc() {}
+            }
+            """
+        } expansion: {
+            """
+            class NetworkService {
+                let constant: Int = 0
+
+                var computed: Int { 2 }
+
+                static var staticProp: Int = 1
+                
+                var missingType = 2
+
+                func generic<T>(x: T) {}
+
+                func rethrowing() rethrows {}
+
+                static func staticFunc() {}
+            }
+            """
+        }
+    }
 
     func testBasicStruct() {
         assertMacro {
