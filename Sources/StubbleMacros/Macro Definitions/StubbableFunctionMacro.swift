@@ -39,6 +39,14 @@ public enum StubbableFunctionMacro {
                 id: .invalidApplication
             )
         }
+        
+        guard function.isInstance else {
+            throw DiagnosticsError(
+                syntax: declaration,
+                message: "'@StubbableFunction' currently does not support non-instance functions",
+                id: .invalidApplication
+            )
+        }
 
         return (function, body)
     }

@@ -1,6 +1,19 @@
 import SwiftSyntax
 
-/// These extensions were taken from ObservationMacros/Extensions.swift in the Swift repository
+extension FunctionDeclSyntax {
+    var isInstance: Bool {
+        for modifier in modifiers {
+            for token in modifier.tokens(viewMode: .all) {
+                if token.tokenKind == .keyword(.static) || token.tokenKind == .keyword(.class) {
+                    return false
+                }
+            }
+        }
+        return true
+    }
+}
+
+/// This extension comes in part from ObservationMacros/Extensions.swift in the Swift repository
 extension VariableDeclSyntax {
     var identifierPattern: IdentifierPatternSyntax? {
         bindings.first?.pattern.as(IdentifierPatternSyntax.self)
