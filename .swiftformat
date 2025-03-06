@@ -76,7 +76,7 @@
 --throwcapturing 
 --timezone system
 --trailingclosures 
---trimwhitespace always
+--trimwhitespace nonblank-lines
 --typeattributes preserve
 --typeblanklines remove
 --typedelimiter space-after

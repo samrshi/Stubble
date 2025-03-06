@@ -62,7 +62,7 @@ final class StubbableTests: XCTestCase {
                 var computed: Int { 2 }
             
                 static var staticProp: Int = 1
-                
+            
                 var missingType = 2
             
                 func generic<T>(x: T) {}
@@ -80,7 +80,7 @@ final class StubbableTests: XCTestCase {
                 var computed: Int { 2 }
 
                 static var staticProp: Int = 1
-                
+            
                 var missingType = 2
 
                 func generic<T>(x: T) {}
