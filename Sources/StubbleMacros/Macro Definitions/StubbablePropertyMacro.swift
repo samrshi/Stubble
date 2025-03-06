@@ -167,9 +167,9 @@ extension StubbablePropertyMacro: AccessorMacro {
         """
 
         return [
+            initAccessor,
             getAccessor,
             setAccessor,
-            initAccessor,
         ]
     }
 }
